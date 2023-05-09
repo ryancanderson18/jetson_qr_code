@@ -5,12 +5,19 @@ import numpy as np
 from pyzbar import pyzbar
 import os
 
-#function to get Serial# from Jetson
+
+#Simple Python script to 
+
+
+#Function to get Serial# from Jetson
+#Not currrently used, but will be usefull long term 
 try:
     serial_number = os.system('cat /proc/device-tree/serial-number')
 except:
     print('cannot retrieve serial number from Jetson Device')
-    
+
+
+#Class to create a thread to bring in the specified video stream from the USB camera
 class vStream:
     def __init__(self,src):
         self.capture=cv2.VideoCapture(src)
@@ -24,7 +31,7 @@ class vStream:
     def getFrame(self):
         return self.frame
 
-
+#Function to decode QR codes, and draw bounding boxes for a given image.
 def qr_decode(image):
     barcodes = pyzbar.decode(image)
     frame_count = 1
@@ -54,28 +61,32 @@ def qr_decode(image):
     return image
 
 
-#camSet='nvarguscamerasrc !  video/x-raw(memory:NVMM), width=3264, height=2464, format=NV12, framerate=21/1 ! nvvidconv flip-method='+str(flip)+' ! video/x-raw, width='+str(dispW)+', height='+str(dispH)+', format=BGRx ! videoconvert ! video/x-raw, format=BGR ! appsink'
 
-#Change the numerical value in the below function to where the USB camera is plugged in
+#Initiate the Video stream for camera 1 (located at port 0)
 cam1=vStream(0)
 
-#Add in a second camera
+#Initiate the Video stream for camera 2 (located at port 2)
 cam2=vStream(2)
 
 
 font=cv2.FONT_HERSHEY_SIMPLEX
 startTime=time.time()
 dtav=0
+
+#Main Thread
 while True:
     try:
+    	#Get the frames from the camera
         myFrame1=cam1.getFrame()
         myFrame2=cam2.getFrame()
+        #Decode the frames
         barcodes1 = qr_decode(myFrame1)
         barcodes2 = qr_decode(myFrame2)
         dt=time.time()-startTime
         startTime=time.time()
         dtav=.9*dtav+.1*dt
         fps=1/dtav
+        #Show the decoded QR codes. 
         cv2.imshow('barcodes1',barcodes1)
         cv2.imshow('barcodes2',barcodes2)
  
